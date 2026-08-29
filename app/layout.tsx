@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Figtree, Noto_Sans } from "next/font/google";
 import "./globals.css";
+import { ThemeProviderWrapper } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
 
-const notoSansHeading = Noto_Sans({subsets:['latin'],variable:'--font-heading'});
+const notoSansHeading = Noto_Sans({
+  subsets: ["latin"],
+  variable: "--font-heading",
+});
 
-const figtree = Figtree({subsets:['latin'],variable:'--font-sans'});
+const figtree = Figtree({ subsets: ["latin"], variable: "--font-sans" });
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,9 +30,19 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans", figtree.variable, notoSansHeading.variable)}
+      className={cn(
+        "h-full",
+        "antialiased",
+        geistSans.variable,
+        geistMono.variable,
+        "font-sans",
+        figtree.variable,
+        notoSansHeading.variable,
+      )}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <ThemeProviderWrapper>{children}</ThemeProviderWrapper>
+      </body>
     </html>
   );
 }
