@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 
+import SearchEnterKeybind from "@/components/SearchEnterKeybind";
+
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
@@ -133,6 +135,8 @@ export default function Home() {
           </InputGroupAddon>
         </InputGroup>
       </div>
+
+      <SearchEnterKeybind searchMode={searchMode} query={searchQuery} />
     </div>
   );
 }

@@ -31,7 +31,7 @@ export default function SettingsPage() {
           variant="outline"
           size="icon"
           className="p-6"
-          onClick={() => router.push("/")}
+          onClick={() => router.back()}
         >
           <ArrowLeft className="size-6 text-foreground/95" />
         </Button>

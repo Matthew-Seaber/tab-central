@@ -31,7 +31,7 @@ export default function SignupPage() {
           variant="outline"
           size="icon"
           className="p-6"
-          onClick={() => router.push("/settings")}
+          onClick={() => router.back()}
         >
           <ArrowLeft className="size-6 text-foreground/95" />
         </Button>
@@ -55,13 +55,15 @@ export default function SignupPage() {
           <CardTitle className="mb-2 text-lg">Sign up</CardTitle>
           <CardDescription>
             Create a Tab Central account to customise your new tab page and save
-            settings across devices
+            settings across devices.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-6">
           <Field>
             <FieldLabel htmlFor="username">Username</FieldLabel>
             <Input
+              id="username"
+              placeholder="Enter your username"
               required
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -71,12 +73,22 @@ export default function SignupPage() {
           <Field>
             <FieldLabel htmlFor="password">Password</FieldLabel>
             <Input
+              id="password"
+              placeholder="Enter your password"
               type="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
           </Field>
+
+          <p className="text-xs text-muted-foreground">
+            Already got an account?{" "}
+            <a href="/login" className="underline hover:opacity-80">
+              Click here
+            </a>{" "}
+            to log in now!
+          </p>
         </CardContent>
 
         <CardFooter>
