@@ -49,7 +49,7 @@ export default function Home() {
           className="p-6"
           onClick={() => setTheme(theme === "light" ? "dark" : "light")}
         >
-          {theme === "light" ? (
+          {theme === "dark" ? (
             <Sun className="size-6 text-foreground/95" />
           ) : (
             <Moon className="size-6 text-foreground/95" />
@@ -58,17 +58,17 @@ export default function Home() {
       </nav>
 
       <div className="min-w-3xl flex flex-col items-center justify-center gap-6">
-        <div className="mb-6 flex flex-col items-center justify-center gap-2 text-center">
+        <div className="mb-6 flex flex-col items-center justify-center gap-3 text-center">
           <h1 className="font-semibold text-6xl">Tab Central</h1>
           <p className="font-medium text-muted-foreground">
             The ultimate new tab page for the AI era.
           </p>
         </div>
 
-        <div className="h-16 flex flex-row items-center justify-center px-4 rounded-lg border border-border shadow-md">
+        <div className="h-16 flex flex-row items-center justify-center rounded-lg border border-border shadow-md">
           <Button
             variant="ghost"
-            className={`h-full flex flex-row gap-3 rounded-none hover:bg-[#e9edff] dark:hover:bg-[#161a2c] ${searchMode === "default" ? "border-b-2 border-b-primary" : ""}`}
+            className={`h-full flex flex-row gap-3 hover:bg-[#e9edff] dark:hover:bg-[#161a2c] ${searchMode === "default" ? "border-b-2 border-b-primary rounded-lg" : ""}`}
             onClick={() => setSearchMode("default")}
           >
             <ScanSearch />
@@ -79,7 +79,7 @@ export default function Home() {
 
           <Button
             variant="ghost"
-            className={`h-full flex flex-row gap-3 rounded-none hover:bg-[#e9edff] dark:hover:bg-[#161a2c] ${searchMode === "search-only" ? "border-b-2 border-b-primary" : ""}`}
+            className={`h-full flex flex-row gap-3 hover:bg-[#e9edff] dark:hover:bg-[#161a2c] ${searchMode === "search-only" ? "border-b-2 border-b-primary rounded-lg" : ""}`}
             onClick={() => setSearchMode("search-only")}
           >
             <Globe />
@@ -90,7 +90,7 @@ export default function Home() {
 
           <Button
             variant="ghost"
-            className={`h-full flex flex-row gap-3 rounded-none hover:bg-[#e9edff] dark:hover:bg-[#161a2c] ${searchMode === "ai-only" ? "border-b-2 border-b-primary" : ""}`}
+            className={`h-full flex flex-row gap-3 hover:bg-[#e9edff] dark:hover:bg-[#161a2c] ${searchMode === "ai-only" ? "border-b-2 border-b-primary rounded-lg" : ""}`}
             onClick={() => setSearchMode("ai-only")}
           >
             <Sparkles />
@@ -125,6 +125,8 @@ export default function Home() {
                 }
                 alt="Search provider logo"
                 fill
+                sizes="120px"
+                preload={false}
                 className="object-contain pointer-events-none"
               />
             </div>
