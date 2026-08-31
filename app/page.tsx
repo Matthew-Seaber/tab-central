@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 
@@ -30,8 +30,30 @@ export default function Home() {
   >("default");
   const [searchQuery, setSearchQuery] = useState("");
 
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
   const router = useRouter();
   const { theme, setTheme } = useTheme();
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        document.activeElement?.tagName === "INPUT" ||
+        document.activeElement?.tagName === "TEXTAREA"
+      ) {
+        return;
+      }
+
+      if (event.ctrlKey || event.altKey || event.metaKey) {
+        return;
+      }
+
+      searchInputRef.current?.focus();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen items-center gap-8 bg-[radial-gradient(circle_at_50%_35%,#e9edff_0%,#f5f5ff_40%,#ffffff_80%)] dark:bg-[radial-gradient(circle_at_50%_35%,#1e2440_0%,#11131f_40%,#09090b_80%)]">
@@ -107,10 +129,22 @@ export default function Home() {
 
           <InputGroupInput
             id="search-input"
+            ref={searchInputRef}
             placeholder="Search anything..."
+            autoFocus
             className="text-lg!"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") {
+                event.preventDefault();
+                event.stopPropagation();
+
+                searchInputRef.current?.blur();
+
+                return;
+              }
+            }}
           />
 
           <InputGroupAddon align="inline-end" className="pr-0">
