@@ -18,6 +18,7 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { ArrowLeft, Moon, Sun } from "lucide-react";
 
 export default function SignupPage() {
+  const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
@@ -59,6 +60,17 @@ export default function SignupPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-6">
+          <Field>
+            <FieldLabel htmlFor="username">Email</FieldLabel>
+            <Input
+              id="email"
+              placeholder="Enter your email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </Field>
+
           <Field>
             <FieldLabel htmlFor="username">Username</FieldLabel>
             <Input

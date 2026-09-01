@@ -1,20 +1,43 @@
-import {
-  pgTable,
-  text,
-  timestamp,
-  boolean,
-} from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean } from "drizzle-orm/pg-core";
 
 import { randomUUID } from "crypto";
 
 export const user = pgTable("user", {
   id: text("id").default(randomUUID()).primaryKey(),
+  email: text("email").notNull().unique(),
+  name: text("name"),
   username: text("username").notNull().unique(),
+  displayName: text("display_name"),
+  image: text("image"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  emailVerified: boolean("email_verified").default(false).notNull(),
+});
+
+export const account = pgTable("account", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  accountId: text("account_id").notNull(),
+  password: text("password"),
+  providerId: text("provider_id").notNull(),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  accessTokenExpiresAt: timestamp("access_token_expires_at"),
+  refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
+  idToken: text("id_token"),
+  scope: text("scope"),
 });
 
 export const session = pgTable("session", {
-  id: text("id").default(randomUUID()).primaryKey(),
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
@@ -25,7 +48,7 @@ export const session = pgTable("session", {
 
 export const user_settings = pgTable("user_settings", {
   userId: text("user_id")
-    .notNull()
+    .primaryKey()
     .references(() => user.id, { onDelete: "cascade" }),
   showQuickLinks: boolean("show_quick_links").default(true).notNull(),
   defaultSearchMode: text("default_search_mode").default("Normal").notNull(),
