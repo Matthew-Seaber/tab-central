@@ -7,7 +7,7 @@ export const user = pgTable("user", {
   email: text("email").notNull().unique(),
   name: text("name"),
   username: text("username").notNull().unique(),
-  displayName: text("display_name"),
+  displayUsername: text("display_username"),
   image: text("image"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -21,6 +21,7 @@ export const account = pgTable("account", {
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
+  issuer: text("issuer").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   accountId: text("account_id").notNull(),
@@ -42,8 +43,23 @@ export const session = pgTable("session", {
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
   token: text("token").notNull().unique(),
+  ipAddress: text("ip_address"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
   expiresAt: timestamp("expires_at").notNull(),
+  userAgent: text("user_agent"),
+});
+
+export const verification = pgTable("verification", {
+  id: text("id").primaryKey(),
+  identifier: text("identifier").notNull(),
+  value: text("value").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .notNull(),
 });
 
 export const user_settings = pgTable("user_settings", {
