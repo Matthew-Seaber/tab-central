@@ -19,25 +19,136 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
-import { ArrowLeft, Moon, Sun } from "lucide-react";
+import { House, Moon, Sun } from "lucide-react";
 
 export default function SettingsPage() {
   const [loggedIn, setLoggedIn] = useState(false);
+  const [defaultSearchMode, setDefaultSearchMode] = useState("Normal");
+  const [defaultSearchModeLoading, setDefaultSearchModeLoading] =
+    useState(false);
+  const [quickLinksVisible, setQuickLinksVisible] = useState(false);
+  const [quickLinksVisibleLoading, setQuickLinksVisibleLoading] =
+    useState(false);
   const [loading, setLoading] = useState(true);
 
   const router = useRouter();
   const { theme, setTheme } = useTheme();
 
   useEffect(() => {
-    async function fetchAuthStatus() {
+    async function fetchPageData() {
       const session = await authClient.getSession();
 
       setLoggedIn(!!session.data);
-      setLoading(false);
+
+      if (session.data) {
+        const userSettings = await fetch("/api/user_settings/fetch_all", {
+          method: "GET",
+        });
+        const userSettingsData = await userSettings.json();
+
+        if (!userSettings.ok) {
+          toast.error("Failed to fetch your settings. Please try again later.");
+        } else {
+          const fetchedSearchMode = userSettingsData.defaultSearchMode;
+          console.log(fetchedSearchMode);
+
+          setQuickLinksVisible(userSettingsData.showQuickLinks);
+
+          switch (fetchedSearchMode) {
+            case "default":
+              setDefaultSearchMode("Normal");
+              break;
+            case "search-only":
+              setDefaultSearchMode("Web only");
+              break;
+            case "ai-only":
+              setDefaultSearchMode("AI only");
+              break;
+            default:
+              setDefaultSearchMode("Normal");
+          }
+
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
+      }
     }
 
-    fetchAuthStatus();
+    fetchPageData();
   }, []);
+
+  async function handleQuickLinkVisibilityChange() {
+    setQuickLinksVisible((prev) => !prev);
+    setQuickLinksVisibleLoading(true);
+
+    try {
+      const response = await fetch("/api/quick_links/visibility", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ newVisibility: !quickLinksVisible }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update quick links visibility");
+      }
+    } catch (error) {
+      setQuickLinksVisible((prev) => !prev);
+      console.error("Error updating quick link visibility:", error);
+
+      toast.error(
+        "Failed to update quick link visibility. Please try again later.",
+      );
+    } finally {
+      setQuickLinksVisibleLoading(false);
+    }
+  }
+
+  async function handleDefaultSearchModeChange(newSearchMode: string) {
+    const previousSearchMode = defaultSearchMode;
+    console.log(previousSearchMode);
+
+    setDefaultSearchMode(newSearchMode);
+    setDefaultSearchModeLoading(true);
+
+    try {
+      if (newSearchMode === "Normal") {
+        newSearchMode = "default";
+      } else if (newSearchMode === "Web only") {
+        newSearchMode = "search-only";
+      } else if (newSearchMode === "AI only") {
+        newSearchMode = "ai-only";
+      } else {
+        throw new Error("Invalid search mode value");
+      }
+
+      const response = await fetch(
+        "/api/user_settings/edit_default_search_mode",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ newSearchMode: newSearchMode }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update default search mode");
+      }
+    } catch (error) {
+      setDefaultSearchMode(previousSearchMode);
+      console.error("Error updating default search mode:", error);
+
+      toast.error(
+        "Failed to update default search mode. Please try again later.",
+      );
+    } finally {
+      setDefaultSearchModeLoading(false);
+    }
+  }
 
   async function handleLogout() {
     await authClient.signOut();
@@ -74,9 +185,9 @@ export default function SettingsPage() {
           variant="outline"
           size="icon"
           className="p-6"
-          onClick={() => router.back()}
+          onClick={() => router.push("/")}
         >
-          <ArrowLeft className="size-6 text-foreground/95" />
+          <House className="size-6 text-foreground/95" />
         </Button>
 
         <Button
@@ -109,13 +220,25 @@ export default function SettingsPage() {
         ) : loggedIn ? (
           <div className="w-full flex flex-col gap-6">
             <Field orientation="horizontal">
-              <Checkbox id="quick-links" />
+              <Checkbox
+                id="quick-links"
+                checked={quickLinksVisible}
+                disabled={quickLinksVisibleLoading}
+                onCheckedChange={handleQuickLinkVisibilityChange}
+              />
               <FieldLabel htmlFor="quick-links">Show quick links</FieldLabel>
             </Field>
 
             <Field className="w-1/3">
               <FieldLabel htmlFor="search-mode">Default search mode</FieldLabel>
-              <Select id="search-mode" defaultValue="Normal">
+              <Select
+                id="search-mode"
+                disabled={defaultSearchModeLoading}
+                value={defaultSearchMode}
+                onValueChange={(value) => {
+                  handleDefaultSearchModeChange(value as string);
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
