@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
+
+import { authClient } from "@/lib/auth-client";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -15,6 +17,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
+import { Toaster } from "@/components/ui/sonner";
+import { toast } from "sonner";
 import { ArrowLeft, Moon, Sun } from "lucide-react";
 
 export default function SettingsPage() {
@@ -23,6 +27,45 @@ export default function SettingsPage() {
 
   const router = useRouter();
   const { theme, setTheme } = useTheme();
+
+  useEffect(() => {
+    async function fetchAuthStatus() {
+      const session = await authClient.getSession();
+
+      setLoggedIn(!!session.data);
+      setLoading(false);
+    }
+
+    fetchAuthStatus();
+  }, []);
+
+  async function handleLogout() {
+    await authClient.signOut();
+
+    router.push("/login");
+  }
+
+  async function deleteAccount() {
+    const deletePromise = authClient.deleteUser();
+
+    toast.promise(deletePromise, {
+      loading: "Deleting account...",
+      success: "Account deleted successfully.",
+      error: "Failed to delete account. Please try again later.",
+    });
+
+    try {
+      await deletePromise;
+
+      await authClient.signOut();
+
+      setTimeout(() => {
+        router.push("/signup");
+      }, 1500);
+    } catch (error) {
+      console.error("Error deleting account:", error);
+    }
+  }
 
   return (
     <div className="flex flex-col min-h-screen items-center gap-8 bg-[radial-gradient(circle_at_50%_35%,#e9edff_0%,#f5f5ff_40%,#ffffff_80%)] dark:bg-[radial-gradient(circle_at_50%_35%,#1e2440_0%,#11131f_40%,#09090b_80%)]">
@@ -83,6 +126,13 @@ export default function SettingsPage() {
                 </SelectContent>
               </Select>
             </Field>
+
+            <div className="flex flex-row gap-4">
+              <Button onClick={handleLogout}>Log out</Button>
+              <Button variant="destructive" onClick={deleteAccount}>
+                Delete account
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="flex flex-row gap-4">
@@ -102,6 +152,8 @@ export default function SettingsPage() {
           </div>
         )}
       </div>
+
+      <Toaster position="top-center" />
     </div>
   );
 }
