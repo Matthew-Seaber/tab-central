@@ -16,6 +16,7 @@ import {
   InputGroupInput,
 } from "@/components/ui/input-group";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
@@ -26,6 +27,7 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import {
@@ -56,7 +58,10 @@ export default function Home() {
   const [quickLinks, setQuickLinks] = useState<QuickLink[]>([]);
   const [quickLinksVisible, setQuickLinksVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [newQuickLinkName, setNewQuickLinkName] = useState("");
+  const [newQuickLinkURL, setNewQuickLinkURL] = useState("");
   const [focusedLinkID, setFocusedLinkID] = useState<string | null>(null);
+  const [addQuickLinkDialogOpen, setAddQuickLinkDialogOpen] = useState(false);
   const [removeQuickLinkDialogOpen, setRemoveQuickLinkDialogOpen] =
     useState(false);
 
@@ -151,11 +156,11 @@ export default function Home() {
     }
 
     const response = await fetch("/api/quick_links/delete_link", {
-      method: "POST",
+      method: "DELETE",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ id: focusedLinkID }),
+      body: JSON.stringify({ linkID: focusedLinkID }),
     });
 
     if (!response.ok) {
@@ -289,7 +294,10 @@ export default function Home() {
               <h2 className="text-2xl font-semibold">Quick Links</h2>
               <div className="flex flex-row items-center gap-2">
                 {editModeEnabled && (
-                  <Button variant="outline">
+                  <Button
+                    variant="outline"
+                    onClick={() => setAddQuickLinkDialogOpen(true)}
+                  >
                     <Plus />
                     Add
                   </Button>
@@ -307,8 +315,10 @@ export default function Home() {
 
             {quickLinks.length === 0 ? (
               <p className="mt-4 text-center text-sm text-muted-foreground">
-                You have no quick links yet. Click &quot;edit&quot; to add some
-                or hide this section in settings.
+                You have no quick links yet.{" "}
+                {editModeEnabled
+                  ? 'Click "add" to create one or hide this section in settings.'
+                  : 'Click "edit" to add some or hide this section in settings.'}
               </p>
             ) : (
               <div className="w-full grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
@@ -336,7 +346,7 @@ export default function Home() {
                         <div className="flex flex-col gap-2 items-center justify-center">
                           <Image
                             src={getFaviconURL(link.URL)}
-                            alt={"Icon for" + link.name}
+                            alt={"Icon for " + link.name}
                             width={48}
                             height={48}
                           />
@@ -356,6 +366,51 @@ export default function Home() {
       <SearchEnterKeybind searchMode={searchMode} query={searchQuery} />
 
       <Toaster position="top-center" />
+
+      <Dialog
+        open={addQuickLinkDialogOpen}
+        onOpenChange={setAddQuickLinkDialogOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add quick link</DialogTitle>
+          </DialogHeader>
+
+          <Field>
+            <FieldLabel htmlFor="quickLinkName">Name</FieldLabel>
+            <Input
+              id="quickLinkName"
+              placeholder="Enter a display name for the link"
+              required
+              value={newQuickLinkName}
+              onChange={(e) => setNewQuickLinkName(e.target.value)}
+            />
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="quickLinkURL">Link URL</FieldLabel>
+            <Input
+              id="quickLinkURL"
+              placeholder="Enter the link's URL"
+              required
+              value={newQuickLinkURL}
+              onChange={(e) => setNewQuickLinkURL(e.target.value)}
+            />
+          </Field>
+
+          <DialogFooter>
+            <DialogClose>Cancel</DialogClose>
+            <Button
+              onClick={() => {
+                setAddQuickLinkDialogOpen(false);
+                handleAddQuickLink();
+              }}
+            >
+              Add
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={removeQuickLinkDialogOpen}
