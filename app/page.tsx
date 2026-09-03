@@ -4,6 +4,8 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 
+import { authClient } from "@/lib/auth-client";
+
 import SearchEnterKeybind from "@/components/SearchEnterKeybind";
 
 import Image from "next/image";
@@ -14,9 +16,12 @@ import {
   InputGroupInput,
 } from "@/components/ui/input-group";
 import { Separator } from "@/components/ui/separator";
+import { Toaster } from "@/components/ui/sonner";
+import { toast } from "sonner";
 import {
   Globe,
   Moon,
+  Pencil,
   ScanSearch,
   Search,
   Settings,
@@ -24,16 +29,70 @@ import {
   Sun,
 } from "lucide-react";
 
+type QuickLink = {
+  id: string;
+  name: string;
+  URL: string;
+};
+
 export default function Home() {
   const [searchMode, setSearchMode] = useState<
     "default" | "search-only" | "ai-only"
   >("default");
+  const [quickLinks, setQuickLinks] = useState<QuickLink[]>([]);
+  const [quickLinksVisible, setQuickLinksVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const router = useRouter();
   const { theme, setTheme } = useTheme();
+
+  useEffect(() => {
+    async function fetchPageData() {
+      const session = await authClient.getSession();
+
+      if (session.data) {
+        const userSettingsResponse = await fetch(
+          "/api/user_settings/fetch_all",
+          {
+            method: "GET",
+          },
+        );
+
+        if (!userSettingsResponse.ok) {
+          toast.error(
+            "Failed to fetch your preferences. Please try again later.",
+          );
+        } else {
+          const userSettingsData = await userSettingsResponse.json();
+
+          const fetchedSearchMode = userSettingsData.defaultSearchMode;
+
+          setQuickLinksVisible(userSettingsData.showQuickLinks);
+          setSearchMode(fetchedSearchMode);
+        }
+
+        const quickLinksResponse = await fetch("/api/quick_links/fetch_links", {
+          method: "GET",
+        });
+
+        if (!quickLinksResponse.ok) {
+          toast.error(
+            "Failed to fetch your quick links. Please try again later.",
+          );
+        } else {
+          const quickLinksData = await quickLinksResponse.json();
+
+          setQuickLinks(quickLinksData);
+        }
+      } else {
+        setQuickLinksVisible(true);
+      }
+    }
+
+    fetchPageData();
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -168,9 +227,38 @@ export default function Home() {
             </div>
           </InputGroupAddon>
         </InputGroup>
+
+        {quickLinksVisible && (
+          <div className="mt-12 flex flex-col w-full gap-6">
+            <div className="flex flex-row items-center justify-between gap-6">
+              <h2 className="text-2xl font-semibold">Quick Links</h2>
+              <Button variant="outline">
+                <Pencil />
+                Edit
+              </Button>
+            </div>
+
+            {quickLinks.length === 0 ? (
+              <p className="mt-4 text-center text-sm text-muted-foreground">
+                You have no quick links yet. Click &quot;edit&quot; to add some
+                or hide this section in settings.
+              </p>
+            ) : (
+              <div className="grid md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {quickLinks.map((link) => (
+                  <div key={link.id}>
+                    <h4>{link.name}</h4>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <SearchEnterKeybind searchMode={searchMode} query={searchQuery} />
+
+      <Toaster position="top-center" />
     </div>
   );
 }

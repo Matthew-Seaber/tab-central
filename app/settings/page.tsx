@@ -50,7 +50,6 @@ export default function SettingsPage() {
           toast.error("Failed to fetch your settings. Please try again later.");
         } else {
           const fetchedSearchMode = userSettingsData.defaultSearchMode;
-          console.log(fetchedSearchMode);
 
           setQuickLinksVisible(userSettingsData.showQuickLinks);
 
@@ -108,7 +107,6 @@ export default function SettingsPage() {
 
   async function handleDefaultSearchModeChange(newSearchMode: string) {
     const previousSearchMode = defaultSearchMode;
-    console.log(previousSearchMode);
 
     setDefaultSearchMode(newSearchMode);
     setDefaultSearchModeLoading(true);
@@ -226,7 +224,7 @@ export default function SettingsPage() {
                 disabled={quickLinksVisibleLoading}
                 onCheckedChange={handleQuickLinkVisibilityChange}
               />
-              <FieldLabel htmlFor="quick-links">Show quick links</FieldLabel>
+              <FieldLabel htmlFor="quick-links">Show quick links on new tab page</FieldLabel>
             </Field>
 
             <Field className="w-1/3">

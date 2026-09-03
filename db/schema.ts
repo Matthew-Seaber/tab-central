@@ -69,3 +69,15 @@ export const user_settings = pgTable("user_settings", {
   showQuickLinks: boolean("show_quick_links").default(true).notNull(),
   defaultSearchMode: text("default_search_mode").default("Normal").notNull(),
 });
+
+export const quick_links = pgTable("quick_links", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  URL: text("url").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
