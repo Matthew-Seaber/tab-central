@@ -16,17 +16,30 @@ import {
   InputGroupInput,
 } from "@/components/ui/input-group";
 import { Separator } from "@/components/ui/separator";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import {
+  Check,
   Globe,
   Moon,
   Pencil,
+  Plus,
   ScanSearch,
   Search,
   Settings,
   Sparkles,
   Sun,
+  Trash2,
 } from "lucide-react";
 
 type QuickLink = {
@@ -39,9 +52,13 @@ export default function Home() {
   const [searchMode, setSearchMode] = useState<
     "default" | "search-only" | "ai-only"
   >("default");
+  const [editModeEnabled, setEditModeEnabled] = useState(false);
   const [quickLinks, setQuickLinks] = useState<QuickLink[]>([]);
   const [quickLinksVisible, setQuickLinksVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [focusedLinkID, setFocusedLinkID] = useState<string | null>(null);
+  const [removeQuickLinkDialogOpen, setRemoveQuickLinkDialogOpen] =
+    useState(false);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -113,6 +130,44 @@ export default function Home() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
+
+  function getFaviconURL(url: string) {
+    try {
+      const formattedURL = url.startsWith("http")
+        ? new URL(url)
+        : new URL(`http://${url}`);
+
+      return `https://www.google.com/s2/favicons?domain=${formattedURL.hostname}&sz=48`;
+    } catch (error) {
+      console.error("Error fetching favicon:", error);
+      return "/globe.svg";
+    }
+  }
+
+  async function handleDeleteQuickLink() {
+    if (focusedLinkID === null) {
+      toast.error("Error deleting quick link. Please try again later.");
+      return;
+    }
+
+    const response = await fetch("/api/quick_links/delete_link", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id: focusedLinkID }),
+    });
+
+    if (!response.ok) {
+      toast.error("Failed to delete quick link. Please try again later.");
+      setFocusedLinkID(null);
+    } else {
+      toast.success("Quick link deleted.");
+
+      setQuickLinks((prev) => prev.filter((link) => link.id !== focusedLinkID));
+      setFocusedLinkID(null);
+    }
+  }
 
   return (
     <div className="flex flex-col min-h-screen items-center gap-8 bg-[radial-gradient(circle_at_50%_35%,#e9edff_0%,#f5f5ff_40%,#ffffff_80%)] dark:bg-[radial-gradient(circle_at_50%_35%,#1e2440_0%,#11131f_40%,#09090b_80%)]">
@@ -232,10 +287,22 @@ export default function Home() {
           <div className="mt-12 flex flex-col w-full gap-6">
             <div className="flex flex-row items-center justify-between gap-6">
               <h2 className="text-2xl font-semibold">Quick Links</h2>
-              <Button variant="outline">
-                <Pencil />
-                Edit
-              </Button>
+              <div className="flex flex-row items-center gap-2">
+                {editModeEnabled && (
+                  <Button variant="outline">
+                    <Plus />
+                    Add
+                  </Button>
+                )}
+
+                <Button
+                  variant={editModeEnabled ? "default" : "outline"}
+                  onClick={() => setEditModeEnabled(!editModeEnabled)}
+                >
+                  {editModeEnabled ? <Check /> : <Pencil />}
+                  {editModeEnabled ? "Done" : "Edit"}
+                </Button>
+              </div>
             </div>
 
             {quickLinks.length === 0 ? (
@@ -244,11 +311,41 @@ export default function Home() {
                 or hide this section in settings.
               </p>
             ) : (
-              <div className="grid md:grid-cols-4 lg:grid-cols-6 gap-4">
+              <div className="w-full grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
                 {quickLinks.map((link) => (
-                  <div key={link.id}>
-                    <h4>{link.name}</h4>
-                  </div>
+                  <Card
+                    key={link.id}
+                    onClick={() => {
+                      if (editModeEnabled) {
+                        setFocusedLinkID(link.id);
+                        setRemoveQuickLinkDialogOpen(true);
+                      } else {
+                        router.replace(link.URL);
+                      }
+                    }}
+                    className="w-full aspect-square cursor-pointer"
+                  >
+                    <CardContent className="h-full flex items-center justify-center">
+                      {editModeEnabled ? (
+                        <div className="flex flex-col gap-2 items-center justify-center">
+                          <Trash2 className="size-12 text-red-500" />
+
+                          <h4>{link.name}</h4>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-2 items-center justify-center">
+                          <Image
+                            src={getFaviconURL(link.URL)}
+                            alt={"Icon for" + link.name}
+                            width={48}
+                            height={48}
+                          />
+
+                          <h4>{link.name}</h4>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
             )}
@@ -259,6 +356,32 @@ export default function Home() {
       <SearchEnterKeybind searchMode={searchMode} query={searchQuery} />
 
       <Toaster position="top-center" />
+
+      <Dialog
+        open={removeQuickLinkDialogOpen}
+        onOpenChange={setRemoveQuickLinkDialogOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove quick link</DialogTitle>
+            <DialogDescription>
+              Are you sure you wannt to remove this quick link?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose>Cancel</DialogClose>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                setRemoveQuickLinkDialogOpen(false);
+                handleDeleteQuickLink();
+              }}
+            >
+              Remove
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
