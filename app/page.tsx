@@ -136,6 +136,16 @@ export default function Home() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  function validateURL(url: string) {
+    try {
+      const parsedURL = new URL(url);
+
+      return parsedURL.protocol === "http:" || parsedURL.protocol === "https:";
+    } catch {
+      return false;
+    }
+  }
+
   function getFaviconURL(url: string) {
     try {
       const formattedURL = url.startsWith("http")
@@ -146,6 +156,43 @@ export default function Home() {
     } catch (error) {
       console.error("Error fetching favicon:", error);
       return "/globe.svg";
+    }
+  }
+
+  async function handleAddQuickLink() {
+    let url = newQuickLinkURL.trim();
+
+    if (!newQuickLinkName || !newQuickLinkURL) {
+      toast.error("Please fill in all fields.");
+      return;
+    }
+
+    if (!validateURL(url)) {
+      url = `https://${url}`;
+    }
+
+    const response = await fetch("/api/quick_links/add_link", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name: newQuickLinkName, URL: url }),
+    });
+
+    if (!response.ok) {
+      toast.error("Failed to create quick link. Please try again later.");
+    } else {
+      toast.success("Quick link created.");
+
+      const data = await response.json();
+      const newQuickLinkID = data.id;
+
+      setQuickLinks((prev) => [
+        ...prev,
+        { id: newQuickLinkID, name: newQuickLinkName, URL: url },
+      ]);
+      setNewQuickLinkName("");
+      setNewQuickLinkURL("");
     }
   }
 
