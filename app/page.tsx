@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/input-group";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
+import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
@@ -57,6 +58,7 @@ export default function Home() {
   const [editModeEnabled, setEditModeEnabled] = useState(false);
   const [quickLinks, setQuickLinks] = useState<QuickLink[]>([]);
   const [quickLinksVisible, setQuickLinksVisible] = useState(false);
+  const [keybindPromptHidden, setKeybindPromptHidden] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [newQuickLinkName, setNewQuickLinkName] = useState("");
   const [newQuickLinkURL, setNewQuickLinkURL] = useState("");
@@ -114,10 +116,32 @@ export default function Home() {
     }
 
     fetchPageData();
+
+    setTimeout(() => {
+      setKeybindPromptHidden(true);
+    }, 3000);
   }, []);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey) {
+        if (event.repeat) {
+          return;
+        }
+
+        setKeybindPromptHidden(false);
+
+        if (event.key === "1") {
+          setSearchMode("default");
+        } else if (event.key === "2") {
+          setSearchMode("search-only");
+        } else if (event.key === "3") {
+          setSearchMode("ai-only");
+        }
+
+        return;
+      }
+
       if (
         document.activeElement?.tagName === "INPUT" ||
         document.activeElement?.tagName === "TEXTAREA"
@@ -125,15 +149,25 @@ export default function Home() {
         return;
       }
 
-      if (event.ctrlKey || event.altKey || event.metaKey) {
+      if (event.altKey || event.metaKey) {
         return;
       }
 
       searchInputRef.current?.focus();
     };
 
+    const handleKeyUp = (event: KeyboardEvent) => {
+      if (event.key == "Control") {
+        setKeybindPromptHidden(true);
+      }
+    };
+
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
   }, []);
 
   function validateURL(url: string) {
@@ -255,36 +289,66 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="h-16 flex flex-row items-center justify-center rounded-lg border border-border shadow-md">
+        <div className="h-20 flex flex-row items-center justify-center rounded-lg border border-border shadow-md">
           <Button
             variant="ghost"
-            className={`h-full flex flex-row gap-3 hover:bg-[#e9edff] dark:hover:bg-[#161a2c] ${searchMode === "default" ? "border-b-2 border-b-primary rounded-lg" : ""}`}
+            className={`h-full px-4 flex flex-col hover:bg-[#e9edff] dark:hover:bg-[#161a2c] ${searchMode === "default" ? "border-b-2 border-b-primary rounded-lg" : ""} ${keybindPromptHidden ? "gap-0" : "gap-2"}`}
             onClick={() => setSearchMode("default")}
           >
-            <ScanSearch />
-            Default Google search
+            <div className="flex flex-row gap-3">
+              <ScanSearch />
+              Default Google search
+            </div>
+
+            <KbdGroup
+              className={`overflow-hidden transition-all duration-300 ${keybindPromptHidden ? "opacity-0 max-h-0 scale-90" : "opacity-100 max-h-10 scale-100"}`}
+            >
+              <Kbd>Ctrl</Kbd>
+              <span>+</span>
+              <Kbd>1</Kbd>
+            </KbdGroup>
           </Button>
 
           <Separator orientation="vertical" className="my-auto h-8" />
 
           <Button
             variant="ghost"
-            className={`h-full flex flex-row gap-3 hover:bg-[#e9edff] dark:hover:bg-[#161a2c] ${searchMode === "search-only" ? "border-b-2 border-b-primary rounded-lg" : ""}`}
+            className={`h-full px-4 flex flex-col hover:bg-[#e9edff] dark:hover:bg-[#161a2c] ${searchMode === "search-only" ? "border-b-2 border-b-primary rounded-lg" : ""} ${keybindPromptHidden ? "gap-0" : "gap-2"}`}
             onClick={() => setSearchMode("search-only")}
           >
-            <Globe />
-            Web only mode
+            <div className="flex flex-row gap-3">
+              <Globe />
+              Web only mode
+            </div>
+
+            <KbdGroup
+              className={`overflow-hidden transition-all duration-300 ${keybindPromptHidden ? "opacity-0 max-h-0 scale-90" : "opacity-100 max-h-10 scale-100"}`}
+            >
+              <Kbd>Ctrl</Kbd>
+              <span>+</span>
+              <Kbd>2</Kbd>
+            </KbdGroup>
           </Button>
 
           <Separator orientation="vertical" className="my-auto h-8" />
 
           <Button
             variant="ghost"
-            className={`h-full flex flex-row gap-3 hover:bg-[#e9edff] dark:hover:bg-[#161a2c] ${searchMode === "ai-only" ? "border-b-2 border-b-primary rounded-lg" : ""}`}
+            className={`h-full px-4 flex flex-col hover:bg-[#e9edff] dark:hover:bg-[#161a2c] ${searchMode === "ai-only" ? "border-b-2 border-b-primary rounded-lg" : ""} ${keybindPromptHidden ? "gap-0" : "gap-2"}`}
             onClick={() => setSearchMode("ai-only")}
           >
-            <Sparkles />
-            AI mode
+            <div className="flex flex-row gap-3">
+              <Sparkles />
+              AI mode
+            </div>
+
+            <KbdGroup
+              className={`overflow-hidden transition-all duration-300 ${keybindPromptHidden ? "opacity-0 max-h-0 scale-90" : "opacity-100 max-h-10 scale-100"}`}
+            >
+              <Kbd>Ctrl</Kbd>
+              <span>+</span>
+              <Kbd>3</Kbd>
+            </KbdGroup>
           </Button>
         </div>
 
