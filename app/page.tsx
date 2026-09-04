@@ -7,6 +7,7 @@ import { useTheme } from "next-themes";
 import { authClient } from "@/lib/auth-client";
 
 import SearchEnterKeybind from "@/components/SearchEnterKeybind";
+import AIChatPopup from "@/components/AIChatPopup";
 
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -475,6 +476,8 @@ export default function Home() {
       </div>
 
       <SearchEnterKeybind searchMode={searchMode} query={searchQuery} />
+
+      <AIChatPopup />
 
       <Toaster position="top-center" />
 
