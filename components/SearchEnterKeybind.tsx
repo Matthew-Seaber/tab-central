@@ -6,9 +6,14 @@ import { useRouter } from "next/navigation";
 interface SearchEnterKeybindProps {
   searchMode: "default" | "search-only" | "ai-only";
   query: string;
+  startAIChat: () => void;
 }
 
-function SearchEnterKeybind({ searchMode, query }: SearchEnterKeybindProps) {
+function SearchEnterKeybind({
+  searchMode,
+  query,
+  startAIChat,
+}: SearchEnterKeybindProps) {
   const router = useRouter();
 
   useEffect(() => {
@@ -31,14 +36,14 @@ function SearchEnterKeybind({ searchMode, query }: SearchEnterKeybindProps) {
           constructedURL = `https://www.google.com/search?q=${encodeURIComponent(query + " -ai")}`;
           router.replace(constructedURL);
         } else if (searchMode === "ai-only") {
-          console.log("ai-only");
+          startAIChat();
         }
       }
     }
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [router, searchMode, query]);
+  }, [router, searchMode, query, startAIChat]);
 
   return null;
 }

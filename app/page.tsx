@@ -64,11 +64,13 @@ export default function Home() {
   const [newQuickLinkName, setNewQuickLinkName] = useState("");
   const [newQuickLinkURL, setNewQuickLinkURL] = useState("");
   const [focusedLinkID, setFocusedLinkID] = useState<string | null>(null);
+  const [AIChatOpen, setAIChatOpen] = useState(true);
   const [addQuickLinkDialogOpen, setAddQuickLinkDialogOpen] = useState(false);
   const [removeQuickLinkDialogOpen, setRemoveQuickLinkDialogOpen] =
     useState(false);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const AIChatInputRef = useRef<HTMLInputElement>(null);
 
   const router = useRouter();
   const { theme, setTheme } = useTheme();
@@ -154,7 +156,11 @@ export default function Home() {
         return;
       }
 
-      searchInputRef.current?.focus();
+      if (AIChatOpen) {
+        AIChatInputRef.current?.focus();
+      } else {
+        searchInputRef.current?.focus();
+      }
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {
@@ -169,7 +175,19 @@ export default function Home() {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
     };
-  }, []);
+  });
+
+  function startAIChat() {
+    setAIChatOpen(true);
+    AIChatInputRef.current?.focus();
+
+    setSearchQuery("");
+  }
+
+  function closeAIChat() {
+    setAIChatOpen(false);
+    searchInputRef.current?.focus();
+  }
 
   function validateURL(url: string) {
     try {
@@ -302,7 +320,7 @@ export default function Home() {
             </div>
 
             <KbdGroup
-              className={`overflow-hidden transition-all duration-300 ${keybindPromptHidden ? "opacity-0 max-h-0 scale-90" : "opacity-100 max-h-10 scale-100"}`}
+              className={`overflow-hidden transition-all duration-300 ${keybindPromptHidden ? "opacity-0 max-h-0 scale-50" : "opacity-100 max-h-10 scale-100"}`}
             >
               <Kbd>Ctrl</Kbd>
               <span>+</span>
@@ -323,7 +341,7 @@ export default function Home() {
             </div>
 
             <KbdGroup
-              className={`overflow-hidden transition-all duration-300 ${keybindPromptHidden ? "opacity-0 max-h-0 scale-90" : "opacity-100 max-h-10 scale-100"}`}
+              className={`overflow-hidden transition-all duration-300 ${keybindPromptHidden ? "opacity-0 max-h-0 scale-50" : "opacity-100 max-h-10 scale-100"}`}
             >
               <Kbd>Ctrl</Kbd>
               <span>+</span>
@@ -344,7 +362,7 @@ export default function Home() {
             </div>
 
             <KbdGroup
-              className={`overflow-hidden transition-all duration-300 ${keybindPromptHidden ? "opacity-0 max-h-0 scale-90" : "opacity-100 max-h-10 scale-100"}`}
+              className={`overflow-hidden transition-all duration-300 ${keybindPromptHidden ? "opacity-0 max-h-0 scale-50" : "opacity-100 max-h-10 scale-100"}`}
             >
               <Kbd>Ctrl</Kbd>
               <span>+</span>
@@ -475,9 +493,14 @@ export default function Home() {
         )}
       </div>
 
-      <SearchEnterKeybind searchMode={searchMode} query={searchQuery} />
+      <SearchEnterKeybind searchMode={searchMode} query={searchQuery} startAIChat={startAIChat} />
 
-      <AIChatPopup />
+      <AIChatPopup
+        open={AIChatOpen}
+        query={searchQuery}
+        inputRef={AIChatInputRef}
+        onClose={closeAIChat}
+      />
 
       <Toaster position="top-center" />
 
@@ -534,7 +557,7 @@ export default function Home() {
           <DialogHeader>
             <DialogTitle>Remove quick link</DialogTitle>
             <DialogDescription>
-              Are you sure you wannt to remove this quick link?
+              Are you sure you want to remove this quick link?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
