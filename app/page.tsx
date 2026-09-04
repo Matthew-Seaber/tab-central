@@ -247,7 +247,7 @@ export default function Home() {
         </Button>
       </nav>
 
-      <div className="min-w-3xl flex flex-col items-center justify-center gap-6">
+      <div className="min-w-3xl px-16 flex flex-col items-center justify-center gap-6">
         <div className="mb-6 flex flex-col items-center justify-center gap-3 text-center">
           <h1 className="font-semibold text-6xl">Tab Central</h1>
           <p className="font-medium text-muted-foreground">
@@ -368,7 +368,7 @@ export default function Home() {
                   : 'Click "edit" to add some or hide this section in settings.'}
               </p>
             ) : (
-              <div className="w-full grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
+              <div className="w-full grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
                 {quickLinks.map((link) => (
                   <Card
                     key={link.id}
@@ -380,7 +380,7 @@ export default function Home() {
                         router.replace(link.URL);
                       }
                     }}
-                    className="w-full aspect-square cursor-pointer"
+                    className="w-full aspect-square cursor-pointer hover:bg-accent/50"
                   >
                     <CardContent className="h-full flex items-center justify-center">
                       {editModeEnabled ? (
