@@ -56,14 +56,12 @@ export async function POST(request: Request) {
       );
     }
 
-    const firstMessage = messages.length === 1;
-
-    const response = await openai.responses.create({
+    const stream = await openai.responses.create({
       model: process.env.OPENAI_MODEL,
 
       input: [
         {
-          role: "system",
+          role: "developer",
           content: SYSTEM_PROMPT,
         },
 
@@ -76,46 +74,34 @@ export async function POST(request: Request) {
         })),
       ],
 
-      ...(firstMessage && {
-        text: {
-          format: {
-            type: "json_schema",
-            name: "chat_response",
-            strict: true,
-            schema: {
-              type: "object",
-              properties: {
-                chatTopic: {
-                  type: "string",
-                  description:
-                    "A short 2-6 word title for the main topic of the user's message. This should be the main subject of the conversation, not rewording the user's question.",
-                },
-
-                response: {
-                  type: "string",
-                  description:
-                    "The AI's response to the user's message. This should be a concise and accurate answer to the user's question or request.",
-                },
-              },
-
-              required: ["chatTopic", "response"],
-              additionalProperties: false,
-            },
-          },
-        },
-      }),
+      stream: true,
     });
 
-    if (firstMessage) {
-      const result = JSON.parse(response.output_text);
+    const encoder = new TextEncoder();
 
-      return NextResponse.json({
-        chatTopic: result.chatTopic,
-        response: result.response,
-      });
-    }
+    const readableStream = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const event of stream) {
+            if (event.type === "response.output_text.delta") {
+              controller.enqueue(encoder.encode(event.delta));
+            }
+          }
 
-    return NextResponse.json({ response: response.output_text });
+          controller.close();
+        } catch (error) {
+          console.log("Error generating AI response:", error);
+          controller.error(error);
+        }
+      },
+    });
+
+    return new Response(readableStream, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-cache",
+      },
+    });
   } catch (error) {
     console.log("Error generating AI response:", error);
 

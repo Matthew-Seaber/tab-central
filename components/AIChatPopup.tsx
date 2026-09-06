@@ -51,29 +51,80 @@ type Message = {
 };
 
 function AIChatPopup({ open, query, inputRef, onClose }: AIChatPopupProps) {
-  const [chatTopic, setChatTopic] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [messageLoading, setMessageLoading] = useState<boolean>(false);
+  const [messageLoading, setMessageLoading] = useState<boolean>(true);
   const [newMessage, setNewMessage] = useState<string>("");
   const [deleteConfirmationDialogOpen, setDeleteConfirmationDialogOpen] =
     useState(false);
 
   const initialQuery = query;
 
+  async function fetchAIResponse(messageID: string, messages: Message[]) {
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ messages }),
+      });
+
+      if (!response.ok || !response.body) {
+        throw new Error("Failed to fetch AI response");
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      let complete = false;
+
+      while (!complete) {
+        const { value, done } = await reader.read();
+
+        if (done) {
+          complete = true;
+          break;
+        }
+
+        const chunk = decoder.decode(value, { stream: true });
+
+        setMessages((prevMessages) =>
+          prevMessages.map((message) =>
+            message.id === messageID
+              ? { ...message, content: message.content + chunk }
+              : message,
+          ),
+        );
+      }
+    } catch (error) {
+      console.log("Error generating AI response:", error);
+    } finally {
+      setMessageLoading(false);
+    }
+  }
+
   useEffect(() => {
-    if (!open) {
+    if (!open || !initialQuery.trim()) {
       return;
     }
 
     inputRef.current?.focus();
 
-    setMessages([
-      {
-        id: crypto.randomUUID(),
-        authorType: "user",
-        content: initialQuery,
-      },
-    ]);
+    const initialMessage: Message = {
+      id: crypto.randomUUID(),
+      authorType: "user",
+      content: initialQuery.trim(),
+    };
+
+    const aiMessage: Message = {
+      id: crypto.randomUUID(),
+      authorType: "ai",
+      content: "",
+    };
+
+    setMessages([initialMessage, aiMessage]);
+
+    fetchAIResponse(aiMessage.id, [initialMessage]);
   }, [open]);
 
   function handleSendMessage() {
@@ -99,8 +150,11 @@ function AIChatPopup({ open, query, inputRef, onClose }: AIChatPopupProps) {
         <Card className="absolute bottom-8 right-8 h-144 w-96 z-20">
           <CardHeader>
             <CardTitle>AI Mode</CardTitle>
-            <CardDescription>
-              {chatTopic || "Generating response..."}
+            <CardDescription className="flex flex-row gap-2 items-center">
+              <span
+                className={`h-2 w-2 rounded-full ${messageLoading ? "bg-yellow-500 animate-pulse" : "bg-green-500"}`}
+              />
+              <p>{messageLoading ? "Generating response..." : "Ready"}</p>
             </CardDescription>
 
             <CardAction>
@@ -192,9 +246,8 @@ function AIChatPopup({ open, query, inputRef, onClose }: AIChatPopupProps) {
               onClick={() => {
                 setDeleteConfirmationDialogOpen(false);
                 setNewMessage("");
-                setChatTopic(null);
                 setMessages([]);
-                setMessageLoading(false);
+                setMessageLoading(true);
 
                 onClose();
               }}
