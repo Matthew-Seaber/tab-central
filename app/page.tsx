@@ -64,7 +64,7 @@ export default function Home() {
   const [newQuickLinkName, setNewQuickLinkName] = useState("");
   const [newQuickLinkURL, setNewQuickLinkURL] = useState("");
   const [focusedLinkID, setFocusedLinkID] = useState<string | null>(null);
-  const [AIChatOpen, setAIChatOpen] = useState(true);
+  const [AIChatOpen, setAIChatOpen] = useState(false);
   const [addQuickLinkDialogOpen, setAddQuickLinkDialogOpen] = useState(false);
   const [removeQuickLinkDialogOpen, setRemoveQuickLinkDialogOpen] =
     useState(false);
@@ -157,7 +157,9 @@ export default function Home() {
       }
 
       if (AIChatOpen) {
-        AIChatInputRef.current?.focus();
+        if (document.activeElement !== searchInputRef.current) {
+          AIChatInputRef.current?.focus();
+        }
       } else {
         searchInputRef.current?.focus();
       }
@@ -175,11 +177,10 @@ export default function Home() {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
     };
-  });
+  }, [AIChatOpen]);
 
   function startAIChat() {
     setAIChatOpen(true);
-    AIChatInputRef.current?.focus();
 
     setSearchQuery("");
   }
@@ -493,7 +494,11 @@ export default function Home() {
         )}
       </div>
 
-      <SearchEnterKeybind searchMode={searchMode} query={searchQuery} startAIChat={startAIChat} />
+      <SearchEnterKeybind
+        searchMode={searchMode}
+        query={searchQuery}
+        startAIChat={startAIChat}
+      />
 
       <AIChatPopup
         open={AIChatOpen}

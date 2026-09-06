@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -57,6 +57,24 @@ function AIChatPopup({ open, query, inputRef, onClose }: AIChatPopupProps) {
   const [newMessage, setNewMessage] = useState<string>("");
   const [deleteConfirmationDialogOpen, setDeleteConfirmationDialogOpen] =
     useState(false);
+
+  const initialQuery = query;
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    inputRef.current?.focus();
+
+    setMessages([
+      {
+        id: crypto.randomUUID(),
+        authorType: "user",
+        content: initialQuery,
+      },
+    ]);
+  }, [open]);
 
   function handleSendMessage() {
     setMessageLoading(true);
@@ -129,6 +147,16 @@ function AIChatPopup({ open, query, inputRef, onClose }: AIChatPopupProps) {
                 ref={inputRef}
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") {
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    inputRef.current?.blur();
+
+                    return;
+                  }
+                }}
               />
 
               <InputGroupAddon align="inline-end">

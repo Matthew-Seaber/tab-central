@@ -1,4 +1,10 @@
-import { pgTable, text, timestamp, boolean } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  timestamp,
+  boolean,
+  integer,
+} from "drizzle-orm/pg-core";
 
 import { randomUUID } from "crypto";
 
@@ -68,6 +74,7 @@ export const user_settings = pgTable("user_settings", {
     .references(() => user.id, { onDelete: "cascade" }),
   showQuickLinks: boolean("show_quick_links").default(true).notNull(),
   defaultSearchMode: text("default_search_mode").default("default").notNull(),
+  aiRemainingMessages: integer("ai_remaining_messages").default(100).notNull(),
 });
 
 export const quick_links = pgTable("quick_links", {
