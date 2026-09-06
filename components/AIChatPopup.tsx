@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -76,61 +76,93 @@ function AIChatPopup({ open, query, inputRef, onClose }: AIChatPopupProps) {
   const [deleteConfirmationDialogOpen, setDeleteConfirmationDialogOpen] =
     useState(false);
 
-  async function fetchAIResponse(messageID: string, messagesToSend: Message[]) {
-    try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ messages: messagesToSend }),
-      });
+  const fetchAIResponse = useCallback(
+    async (messageID: string, messagesToSend: Message[]) => {
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ messages: messagesToSend }),
+        });
 
-      if (!response.ok || !response.body) {
-        throw new Error("Failed to fetch AI response");
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-
-      let complete = false;
-
-      while (!complete) {
-        const { value, done } = await reader.read();
-
-        if (done) {
-          complete = true;
-          break;
+        if (!response.ok || !response.body) {
+          throw new Error("Failed to fetch AI response");
         }
 
-        const chunk = decoder.decode(value, { stream: true });
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
 
-        setMessages((prevMessages) =>
-          prevMessages.map((message) =>
-            message.id === messageID
-              ? { ...message, content: message.content + chunk }
-              : message,
-          ),
-        );
+        while (true) {
+          const { value, done } = await reader.read();
+
+          if (done) {
+            break;
+          }
+
+          const chunk = decoder.decode(value, { stream: true });
+
+          setMessages((prevMessages) =>
+            prevMessages.map((message) =>
+              message.id === messageID
+                ? { ...message, content: message.content + chunk }
+                : message,
+            ),
+          );
+        }
+      } catch (error) {
+        console.log("Error generating AI response:", error);
+      } finally {
+        setMessageLoading(false);
       }
-    } catch (error) {
-      console.log("Error generating AI response:", error);
-    } finally {
-      setMessageLoading(false);
-    }
-  }
+    },
+    [],
+  );
+
+  const initialQueryRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!open || !query.trim() || messages.length < 2) {
+    if (!open) {
+      initialQueryRef.current = null;
       return;
     }
 
+    const initialQuery = query.trim();
+
+    if (!initialQuery) {
+      return;
+    }
+
+    if (initialQueryRef.current === initialQuery) {
+      return;
+    }
+
+    initialQueryRef.current = initialQuery;
     inputRef.current?.focus();
 
-    fetchAIResponse(messages[1].id, [messages[0]]);
-  }, [open, query, inputRef]);
+    const userMessage: Message = {
+      id: crypto.randomUUID(),
+      authorType: "user",
+      content: initialQuery,
+    };
+
+    const aiMessage: Message = {
+      id: crypto.randomUUID(),
+      authorType: "ai",
+      content: "",
+    };
+
+    setMessages([userMessage, aiMessage]);
+
+    fetchAIResponse(aiMessage.id, [userMessage]);
+  }, [open, query, inputRef, fetchAIResponse]);
 
   function handleSendMessage() {
+    if (!newMessage.trim() || messageLoading) {
+      return;
+    }
+
     setMessageLoading(true);
 
     const userMessage: Message = {
