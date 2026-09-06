@@ -6,7 +6,7 @@ import OpenAI from "openai";
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { user_settings } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq, gt, sql } from "drizzle-orm";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -43,13 +43,19 @@ export async function POST(request: Request) {
 
   try {
     const remainingMessages = await db
-      .select({
-        aiRemainingMessages: user_settings.aiRemainingMessages,
+      .update(user_settings)
+      .set({
+        aiRemainingMessages: sql`(${user_settings.aiRemainingMessages} - 1)`,
       })
-      .from(user_settings)
-      .where(eq(user_settings.userId, session.user.id));
+      .where(
+        and(
+          eq(user_settings.userId, session.user.id),
+          gt(user_settings.aiRemainingMessages, 0),
+        ),
+      )
+      .returning({ aiRemainingMessages: user_settings.aiRemainingMessages });
 
-    if (remainingMessages[0].aiRemainingMessages <= 0) {
+    if (remainingMessages.length === 0) {
       return NextResponse.json(
         { error: "You have no remaining AI messages" },
         { status: 403 },

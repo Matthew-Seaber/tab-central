@@ -51,22 +51,39 @@ type Message = {
 };
 
 function AIChatPopup({ open, query, inputRef, onClose }: AIChatPopupProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    const initialQuery = query.trim();
+
+    if (!initialQuery) {
+      return [];
+    }
+
+    return [
+      {
+        id: crypto.randomUUID(),
+        authorType: "user",
+        content: initialQuery,
+      },
+      {
+        id: crypto.randomUUID(),
+        authorType: "ai",
+        content: "",
+      },
+    ];
+  });
   const [messageLoading, setMessageLoading] = useState<boolean>(true);
   const [newMessage, setNewMessage] = useState<string>("");
   const [deleteConfirmationDialogOpen, setDeleteConfirmationDialogOpen] =
     useState(false);
 
-  const initialQuery = query;
-
-  async function fetchAIResponse(messageID: string, messages: Message[]) {
+  async function fetchAIResponse(messageID: string, messagesToSend: Message[]) {
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ messages }),
+        body: JSON.stringify({ messages: messagesToSend }),
       });
 
       if (!response.ok || !response.body) {
@@ -104,16 +121,22 @@ function AIChatPopup({ open, query, inputRef, onClose }: AIChatPopupProps) {
   }
 
   useEffect(() => {
-    if (!open || !initialQuery.trim()) {
+    if (!open || !query.trim() || messages.length < 2) {
       return;
     }
 
     inputRef.current?.focus();
 
-    const initialMessage: Message = {
+    fetchAIResponse(messages[1].id, [messages[0]]);
+  }, [open, query, inputRef]);
+
+  function handleSendMessage() {
+    setMessageLoading(true);
+
+    const userMessage: Message = {
       id: crypto.randomUUID(),
       authorType: "user",
-      content: initialQuery.trim(),
+      content: newMessage.trim(),
     };
 
     const aiMessage: Message = {
@@ -122,22 +145,12 @@ function AIChatPopup({ open, query, inputRef, onClose }: AIChatPopupProps) {
       content: "",
     };
 
-    setMessages([initialMessage, aiMessage]);
-
-    fetchAIResponse(aiMessage.id, [initialMessage]);
-  }, [open]);
-
-  function handleSendMessage() {
-    setMessageLoading(true);
-    setMessages((prevMessages) => [
-      ...prevMessages,
-      {
-        id: crypto.randomUUID(),
-        authorType: "user",
-        content: newMessage,
-      },
-    ]);
     setNewMessage("");
+
+    const updatedMessages = [...messages, userMessage, aiMessage];
+    setMessages(updatedMessages);
+
+    fetchAIResponse(aiMessage.id, [...messages, userMessage]);
   }
 
   if (!open) {

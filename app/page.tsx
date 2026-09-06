@@ -61,6 +61,7 @@ export default function Home() {
   const [quickLinksVisible, setQuickLinksVisible] = useState(false);
   const [keybindPromptHidden, setKeybindPromptHidden] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [AIPrompt, setAIPrompt] = useState("");
   const [newQuickLinkName, setNewQuickLinkName] = useState("");
   const [newQuickLinkURL, setNewQuickLinkURL] = useState("");
   const [focusedLinkID, setFocusedLinkID] = useState<string | null>(null);
@@ -180,6 +181,7 @@ export default function Home() {
   }, [AIChatOpen]);
 
   function startAIChat() {
+    setAIPrompt(searchQuery);
     setAIChatOpen(true);
 
     setSearchQuery("");
@@ -187,6 +189,8 @@ export default function Home() {
 
   function closeAIChat() {
     setAIChatOpen(false);
+    setAIPrompt("");
+
     searchInputRef.current?.focus();
   }
 
@@ -502,7 +506,7 @@ export default function Home() {
 
       <AIChatPopup
         open={AIChatOpen}
-        query={searchQuery}
+        query={AIPrompt}
         inputRef={AIChatInputRef}
         onClose={closeAIChat}
       />
