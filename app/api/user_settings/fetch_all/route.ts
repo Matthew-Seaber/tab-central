@@ -24,6 +24,7 @@ export async function GET() {
         showQuickLinks: user_settings.showQuickLinks,
         defaultSearchMode: user_settings.defaultSearchMode,
         remainingAIMessages: user_settings.aiRemainingMessages,
+        openPagesInNewTab: user_settings.openPagesInNewTab,
       })
       .from(user_settings)
       .where(eq(user_settings.userId, session.user.id))

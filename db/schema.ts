@@ -75,6 +75,7 @@ export const user_settings = pgTable("user_settings", {
   showQuickLinks: boolean("show_quick_links").default(true).notNull(),
   defaultSearchMode: text("default_search_mode").default("default").notNull(),
   aiRemainingMessages: integer("ai_remaining_messages").default(50).notNull(),
+  openPagesInNewTab: boolean("open_pages_in_new_tab").default(false).notNull(),
 });
 
 export const quick_links = pgTable("quick_links", {

@@ -60,6 +60,7 @@ export default function Home() {
   const [editModeEnabled, setEditModeEnabled] = useState(false);
   const [quickLinks, setQuickLinks] = useState<QuickLink[]>([]);
   const [quickLinksVisible, setQuickLinksVisible] = useState(false);
+  const [openPagesInNewTab, setOpenPagesInNewTab] = useState(false);
   const [keybindPromptHidden, setKeybindPromptHidden] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [AIPrompt, setAIPrompt] = useState("");
@@ -99,9 +100,11 @@ export default function Home() {
           const userSettingsData = await userSettingsResponse.json();
 
           const fetchedSearchMode = userSettingsData.defaultSearchMode;
+          const fetchedOpenPagesInNewTab = userSettingsData.openPagesInNewTab;
 
           setQuickLinksVisible(userSettingsData.showQuickLinks);
           setSearchMode(fetchedSearchMode);
+          setOpenPagesInNewTab(fetchedOpenPagesInNewTab);
         }
 
         const quickLinksResponse = await fetch("/api/quick_links/fetch_links", {
@@ -490,7 +493,15 @@ export default function Home() {
                         setFocusedLinkID(link.id);
                         setRemoveQuickLinkDialogOpen(true);
                       } else {
-                        router.replace(link.URL);
+                        if (openPagesInNewTab) {
+                          window.open(
+                            link.URL,
+                            "_blank",
+                            "noopener,noreferrer",
+                          );
+                        } else {
+                          router.replace(link.URL);
+                        }
                       }
                     }}
                     className="w-full aspect-square cursor-pointer hover:bg-accent/50"
@@ -526,6 +537,7 @@ export default function Home() {
       <SearchEnterKeybind
         searchMode={searchMode}
         query={searchQuery}
+        openPagesInNewTab={openPagesInNewTab}
         startAIChat={startAIChat}
       />
 

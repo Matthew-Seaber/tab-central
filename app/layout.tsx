@@ -41,6 +41,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         notoSansHeading.variable,
       )}
     >
+      <head>
+        <meta name="apple-mobile-web-app-title" content="Tab Central" />
+      </head>
+      
       <body className="min-h-full flex flex-col">
         <ThemeProviderWrapper>{children}</ThemeProviderWrapper>
       </body>

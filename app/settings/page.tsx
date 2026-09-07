@@ -32,6 +32,9 @@ export default function SettingsPage() {
   const [quickLinksVisible, setQuickLinksVisible] = useState(false);
   const [quickLinksVisibleLoading, setQuickLinksVisibleLoading] =
     useState(false);
+  const [pagesOpenInNewTab, setPagesOpenInNewTab] = useState(false);
+  const [pagesOpenInNewTabLoading, setPagesOpenInNewTabLoading] =
+    useState(false);
   const [loading, setLoading] = useState(true);
 
   const router = useRouter();
@@ -56,6 +59,7 @@ export default function SettingsPage() {
 
           setRemainingAIMessages(userSettingsData.remainingAIMessages);
           setQuickLinksVisible(userSettingsData.showQuickLinks);
+          setPagesOpenInNewTab(userSettingsData.openPagesInNewTab);
 
           switch (fetchedSearchMode) {
             case "default":
@@ -86,7 +90,7 @@ export default function SettingsPage() {
     setQuickLinksVisibleLoading(true);
 
     try {
-      const response = await fetch("/api/quick_links/visibility", {
+      const response = await fetch("/api/quick_links/edit_visibility", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -106,6 +110,34 @@ export default function SettingsPage() {
       );
     } finally {
       setQuickLinksVisibleLoading(false);
+    }
+  }
+
+  async function handlePagesOpenInNewTabChange() {
+    setPagesOpenInNewTab((prev) => !prev);
+    setPagesOpenInNewTabLoading(true);
+
+    try {
+      const response = await fetch("/api/quick_links/edit_open_new_tab", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ newValue: !pagesOpenInNewTab }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update setting state");
+      }
+    } catch (error) {
+      setPagesOpenInNewTab((prev) => !prev);
+      console.error("Error updating setting state:", error);
+
+      toast.error(
+        `Failed to ${pagesOpenInNewTab ? "not" : ""} make pages open in a new tab. Please try again later.`,
+      );
+    } finally {
+      setPagesOpenInNewTabLoading(false);
     }
   }
 
@@ -230,6 +262,18 @@ export default function SettingsPage() {
               />
               <FieldLabel htmlFor="quick-links">
                 Show quick links on new tab page
+              </FieldLabel>
+            </Field>
+
+            <Field orientation="horizontal">
+              <Checkbox
+                id="pages-new-tab"
+                checked={pagesOpenInNewTab}
+                disabled={pagesOpenInNewTabLoading}
+                onCheckedChange={handlePagesOpenInNewTabChange}
+              />
+              <FieldLabel htmlFor="pages-new-tab">
+                Open pages in a new tab
               </FieldLabel>
             </Field>
 
