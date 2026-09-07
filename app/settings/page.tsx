@@ -26,6 +26,9 @@ export default function SettingsPage() {
   const [defaultSearchMode, setDefaultSearchMode] = useState("Normal");
   const [defaultSearchModeLoading, setDefaultSearchModeLoading] =
     useState(false);
+  const [remainingAIMessages, setRemainingAIMessages] = useState<number | null>(
+    null,
+  );
   const [quickLinksVisible, setQuickLinksVisible] = useState(false);
   const [quickLinksVisibleLoading, setQuickLinksVisibleLoading] =
     useState(false);
@@ -51,6 +54,7 @@ export default function SettingsPage() {
         } else {
           const fetchedSearchMode = userSettingsData.defaultSearchMode;
 
+          setRemainingAIMessages(userSettingsData.remainingAIMessages);
           setQuickLinksVisible(userSettingsData.showQuickLinks);
 
           switch (fetchedSearchMode) {
@@ -224,7 +228,9 @@ export default function SettingsPage() {
                 disabled={quickLinksVisibleLoading}
                 onCheckedChange={handleQuickLinkVisibilityChange}
               />
-              <FieldLabel htmlFor="quick-links">Show quick links on new tab page</FieldLabel>
+              <FieldLabel htmlFor="quick-links">
+                Show quick links on new tab page
+              </FieldLabel>
             </Field>
 
             <Field className="w-1/3">
@@ -247,6 +253,24 @@ export default function SettingsPage() {
                 </SelectContent>
               </Select>
             </Field>
+
+            <div className="flex flex-col gap-4 bg-card p-4 rounded-md border border-border">
+              <div className="flex flex-col gap-1">
+                <h3>Remaining AI messages</h3>
+                <p className="text-3xl font-bold">{remainingAIMessages}</p>
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                To increase your AI chat credits for free, please{" "}
+                <a
+                  href="https://www.instagram.com/_matthewseaber_"
+                  className="underline"
+                >
+                  contact me
+                </a>
+                .
+              </p>
+            </div>
 
             <div className="flex flex-row gap-4">
               <Button onClick={handleLogout}>Log out</Button>

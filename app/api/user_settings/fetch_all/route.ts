@@ -23,6 +23,7 @@ export async function GET() {
       .select({
         showQuickLinks: user_settings.showQuickLinks,
         defaultSearchMode: user_settings.defaultSearchMode,
+        remainingAIMessages: user_settings.aiRemainingMessages,
       })
       .from(user_settings)
       .where(eq(user_settings.userId, session.user.id))

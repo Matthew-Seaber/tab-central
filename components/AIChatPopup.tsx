@@ -214,7 +214,7 @@ function AIChatPopup({ open, query, inputRef, onClose }: AIChatPopupProps) {
   return (
     <>
       <MessageScrollerProvider>
-        <Card className="absolute bottom-8 right-8 h-[min(44rem, calc(100dvh-2rem))] w-[min(40rem, calc(100vw-2rem))] min-h-128 z-20">
+        <Card className="absolute bottom-8 right-8 h-144 w-132 max-h-[calc(100dvh-4rem)] max-w-[calc(100vw-2rem)] z-20">
           <CardHeader>
             <CardTitle>AI Mode</CardTitle>
             <CardDescription className="flex flex-row gap-2 items-center">
@@ -234,6 +234,7 @@ function AIChatPopup({ open, query, inputRef, onClose }: AIChatPopupProps) {
               </Button>
             </CardAction>
           </CardHeader>
+
           <CardContent className="flex-1 overflow-hidden p-0">
             {messages.length === 0 ? (
               <div className="mt-4 flex flex-row gap-2 items-center justify-center">
@@ -245,7 +246,7 @@ function AIChatPopup({ open, query, inputRef, onClose }: AIChatPopupProps) {
             ) : (
               <MessageScroller>
                 <MessageScrollerViewport>
-                  <MessageScrollerContent className="px-6 pt-1 pb-8">
+                  <MessageScrollerContent className="px-6 pt-1 pb-6">
                     {messages.map((message) => (
                       <Message
                         key={message.id}
@@ -261,7 +262,10 @@ function AIChatPopup({ open, query, inputRef, onClose }: AIChatPopupProps) {
                               {message.authorType === "ai" ? (
                                 <Streamdown
                                   isAnimating={messageLoading}
-                                  className="[&>ul]:pl-6 [&>ol]:pl-6 [&li]:pl-6"
+                                  linkSafety={{
+                                    enabled: false,
+                                  }}
+                                  className="space-y-4 [&>h1]:text-3xl [&>h3]:text-xl [&_ul]:pl-6 [&_ol]:pl-6 [&_ol]:list-decimal [&_figure]:overflow-visible [&_section[data-footnotes]]:hidden [&_a[data-footnote-ref]]:hidden"
                                 >
                                   {message.content}
                                 </Streamdown>
@@ -280,7 +284,8 @@ function AIChatPopup({ open, query, inputRef, onClose }: AIChatPopupProps) {
               </MessageScroller>
             )}
           </CardContent>
-          <CardFooter>
+
+          <CardFooter className="flex flex-col gap-3 px-6">
             <InputGroup className="py-6 px-2">
               <InputGroupInput
                 placeholder="Ask a follow up question..."
@@ -310,6 +315,10 @@ function AIChatPopup({ open, query, inputRef, onClose }: AIChatPopupProps) {
                 </InputGroupButton>
               </InputGroupAddon>
             </InputGroup>
+
+            <p className="text-xs text-muted-foreground">
+              AI can make mistakes. Please double-check important information.
+            </p>
           </CardFooter>
         </Card>
       </MessageScrollerProvider>

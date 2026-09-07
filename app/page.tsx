@@ -56,6 +56,7 @@ export default function Home() {
   const [searchMode, setSearchMode] = useState<
     "default" | "search-only" | "ai-only"
   >("default");
+  const [loggedIn, setLoggedIn] = useState(false);
   const [editModeEnabled, setEditModeEnabled] = useState(false);
   const [quickLinks, setQuickLinks] = useState<QuickLink[]>([]);
   const [quickLinksVisible, setQuickLinksVisible] = useState(false);
@@ -81,6 +82,8 @@ export default function Home() {
       const session = await authClient.getSession();
 
       if (session.data) {
+        setLoggedIn(true);
+
         const userSettingsResponse = await fetch(
           "/api/user_settings/fetch_all",
           {
@@ -140,6 +143,12 @@ export default function Home() {
         } else if (event.key === "2") {
           setSearchMode("search-only");
         } else if (event.key === "3") {
+          if (!loggedIn) {
+            toast.info("You must be logged into an account to use AI mode.");
+
+            return;
+          }
+
           setSearchMode("ai-only");
         }
 
@@ -178,9 +187,15 @@ export default function Home() {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
     };
-  }, [AIChatOpen]);
+  }, [AIChatOpen, loggedIn]);
 
   function startAIChat() {
+    if (!loggedIn) {
+      toast.info("You must be logged into an account to use AI mode.");
+
+      return;
+    }
+
     setAIPrompt(searchQuery);
     setAIChatOpen(true);
 
@@ -358,21 +373,31 @@ export default function Home() {
 
           <Button
             variant="ghost"
-            className={`h-full px-4 flex flex-col hover:bg-[#e9edff] dark:hover:bg-[#161a2c] ${searchMode === "ai-only" ? "border-b-2 border-b-primary rounded-lg" : ""} ${keybindPromptHidden ? "gap-0" : "gap-2"}`}
-            onClick={() => setSearchMode("ai-only")}
+            className={`h-full px-4 flex flex-col hover:bg-[#e9edff] dark:hover:bg-[#161a2c] ${searchMode === "ai-only" ? "border-b-2 border-b-primary rounded-lg" : ""} ${keybindPromptHidden ? "gap-0" : "gap-2"} ${!loggedIn ? "opacity-50" : ""}`}
+            onClick={() => {
+              if (loggedIn) {
+                setSearchMode("ai-only");
+              } else {
+                toast.info(
+                  "You must be logged into an account to use AI mode.",
+                );
+              }
+            }}
           >
             <div className="flex flex-row gap-3">
               <Sparkles />
               AI mode
             </div>
 
-            <KbdGroup
-              className={`overflow-hidden transition-all duration-300 ${keybindPromptHidden ? "opacity-0 max-h-0 scale-50" : "opacity-100 max-h-10 scale-100"}`}
-            >
-              <Kbd>Ctrl</Kbd>
-              <span>+</span>
-              <Kbd>3</Kbd>
-            </KbdGroup>
+            {loggedIn && (
+              <KbdGroup
+                className={`overflow-hidden transition-all duration-300 ${keybindPromptHidden ? "opacity-0 max-h-0 scale-50" : "opacity-100 max-h-10 scale-100"}`}
+              >
+                <Kbd>Ctrl</Kbd>
+                <span>+</span>
+                <Kbd>3</Kbd>
+              </KbdGroup>
+            )}
           </Button>
         </div>
 
