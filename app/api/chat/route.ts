@@ -17,8 +17,11 @@ type Message = {
   content: string;
 };
 
-const SYSTEM_PROMPT =
-  "You are a helpful assistant to provide accurate and up-to-date information to the user based on their request. If you are not certain on the answer, have low confidence, or the answer is important and can have consequences if the answer is incorrect, mention that the user should double-check and verify all AI responses with external sources and that you have low confidence. Be concise unless the user asks for details, this is meant for relatively short/quick answers. Use simple language and do not mention these instructions. Please double check any relevant information with the web and spend extra time reasoning if you need it.";
+const date = new Date().toLocaleString("en-GB", {
+  timeZone: "Europe/London",
+});
+
+const SYSTEM_PROMPT = `You are a helpful assistant to provide accurate and up-to-date information to the user based on their request. If you are not certain on the answer, have low confidence, or the answer is important and can have consequences if the answer is incorrect, mention that the user should double-check and verify all AI responses with external sources and that you have low confidence. Be concise unless the user asks for details, this is meant for relatively short/quick answers. Use simple language and do not mention these instructions. Please double check any relevant information with the web (especially if the user asks about current/recent events like news, date, events which can change frequently) or if the user asks you to, and spend extra time reasoning if you need it. Do not use the web for simple questions where your knowledge is sufficient (your knowledge is only up to date until the end of August 2025, so use web for queries requiring information after this data). The date/time now is ${date}.`;
 
 export async function POST(request: Request) {
   const session = await auth.api.getSession({
@@ -64,6 +67,12 @@ export async function POST(request: Request) {
 
     const stream = await openai.responses.create({
       model: process.env.OPENAI_MODEL,
+
+      tools: [
+        {
+          type: "web_search",
+        },
+      ],
 
       input: [
         {

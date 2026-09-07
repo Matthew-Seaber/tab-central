@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { Streamdown } from "streamdown";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,6 +20,7 @@ import {
   InputGroupInput,
   InputGroupButton,
 } from "@/components/ui/input-group";
+import { Bubble, BubbleContent } from "@/components/ui/bubble";
 import { Message, MessageContent } from "@/components/ui/message";
 import {
   MessageScroller,
@@ -120,6 +123,25 @@ function AIChatPopup({ open, query, inputRef, onClose }: AIChatPopupProps) {
     [],
   );
 
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      const activeElement = document.activeElement as HTMLElement;
+
+      if (activeElement.tagName !== "INPUT" || newMessage === "") {
+        return;
+      }
+
+      if (event.key === "Enter" && activeElement.tagName === "INPUT") {
+        event.preventDefault();
+
+        handleSendMessage();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  });
+
   const initialQueryRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -192,7 +214,7 @@ function AIChatPopup({ open, query, inputRef, onClose }: AIChatPopupProps) {
   return (
     <>
       <MessageScrollerProvider>
-        <Card className="absolute bottom-8 right-8 h-144 w-96 z-20">
+        <Card className="absolute bottom-8 right-8 h-[min(44rem, calc(100dvh-2rem))] w-[min(40rem, calc(100vw-2rem))] min-h-128 z-20">
           <CardHeader>
             <CardTitle>AI Mode</CardTitle>
             <CardDescription className="flex flex-row gap-2 items-center">
@@ -223,13 +245,32 @@ function AIChatPopup({ open, query, inputRef, onClose }: AIChatPopupProps) {
             ) : (
               <MessageScroller>
                 <MessageScrollerViewport>
-                  <MessageScrollerContent>
+                  <MessageScrollerContent className="px-6 pt-1 pb-8">
                     {messages.map((message) => (
                       <Message
                         key={message.id}
                         align={message.authorType === "user" ? "end" : "start"}
                       >
-                        <MessageContent>{message.content}</MessageContent>
+                        <MessageContent>
+                          <Bubble
+                            variant={
+                              message.authorType === "user" ? "tinted" : "ghost"
+                            }
+                          >
+                            <BubbleContent>
+                              {message.authorType === "ai" ? (
+                                <Streamdown
+                                  isAnimating={messageLoading}
+                                  className="[&>ul]:pl-6 [&>ol]:pl-6 [&li]:pl-6"
+                                >
+                                  {message.content}
+                                </Streamdown>
+                              ) : (
+                                message.content
+                              )}
+                            </BubbleContent>
+                          </Bubble>
+                        </MessageContent>
                       </Message>
                     ))}
                   </MessageScrollerContent>
