@@ -23,7 +23,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Tab Central",
-  description: "A modern and minimal new tab page for your browser.",
+  description: "A modern and minimal new tab page for your browser. Just like this description.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
